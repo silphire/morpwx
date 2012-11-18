@@ -3,7 +3,16 @@
  */
 
 function onDrop(event) {
-  alert("drop!");
+  var files = event.dataTransfer.files;
+  var elem = event.target || event.srcElement;
+  if(!elem) { alert("cannot get elem"); }
+
+  var x = "";
+  for(var i = 0; i < files.length; ++i) {
+    x += files[i].name + " " + files[i].type + " " + files[i].size + "\n";
+  }
+  elem.value = x;
+
   event.preventDefault();
 }
 

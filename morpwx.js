@@ -37,38 +37,33 @@ var pwx = {
   readFromXML: function(xml) {
     var obj = {};
     var summaryData = {};
-    var elem;
     var result = null;
 
+    var nsResolver = { lookupNamespaceURI : function(prefix) {
+      console.log("prefix " + prefix);
+      return "http://www.peaksware.com/PWX/1/0";
+    }};
+
     var num = function(name) {
-      result = xml.evaluate('/pwx/workout/summarydata/' + name, xml, null, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-      console.log(result);
-      console.log(result.resultType);
-      if(result) { 
-	var elem = result.singleNodeValue;
-	summaryData[name] = elem;
-	console.log(">>> " + elem);
+      result = xml.evaluate('/pwx/workout/summarydata/' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+      var elem = result.singleNodeValue;
+      if(elem) { 
+	summaryData[name] = elem.textContent;
+	console.log(">>> " + name + " " + summaryData[name]);
       }
-      else { console.log(name + " not found"); }
     };
     var mma = function(name) {
-      var mma = {};
+      var prop = {};
       var found = false;
 
-      result = xml.evaluate('/pwx/workout/summarydata/' + name + '/@max', xml, null, XPathResult.STRING_TYPE, result);
-      if(result) { mma['max'] = result.stringValue; found = true; }
-      else { console.log(name + " max not found"); }
-
-      result = xml.evaluate('/pwx/workout/summarydata/' + name + '/@min', xml, null, XPathResult.STRING_TYPE, result);
-      if(result) { mma['min'] = result.stringValue; found = true; }
-      else { console.log(name + " min not found"); }
-
-      result = xml.evaluate('/pwx/workout/summarydata/' + name + '/@avg', xml, null, XPathResult.STRING_TYPE, result);
-      if(result) { mma['avg'] = result.stringValue; found = true; }
-      else { console.log(name + " avg not found"); }
-
-      if(found) {
-	summaryData[name] = mma;
+      result = xml.evaluate('/pwx/workout/summarydata/' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+      var elem = result.singleNodeValue;
+      if(elem) { 
+	prop.max = elem.getAttributeNode('max').textContent;
+	prop.min = elem.getAttributeNode('min').textContent;
+	prop.avg = elem.getAttributeNode('avg').textContent;
+	summaryData[name] = prop;
+	console.log(">>> " + name + " max:" + prop.max + " min:" + prop.min + " avg:" + prop.avg);
       }
     }
 
@@ -83,6 +78,7 @@ var pwx = {
     mma('alt');
     obj.summarydata = summaryData;
 
+    result = null;
     return obj;
   }, 
 

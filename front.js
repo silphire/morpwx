@@ -9,9 +9,21 @@ function onDrop(event) {
 
   var x = "";
   for(var i = 0; i < files.length; ++i) {
-    x += files[i].name + " " + files[i].type + " " + files[i].size + "\n";
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      var text = reader.result;
+      var domParser = new DOMParser();
+      var xml = domParser.parseFromString(text, 'application/xml');
+      var pwx = new PWX();
+      var pwxJson = pwx.readFromXML(xml);
+      for(var j = 0; j < pwxJson.sample.length; ++j) {
+	x += pwxJson.sample[j].timeoffset + "\n";
+      }
+      elem.value = x;
+      console.log(x);
+    }
+    reader.readAsText(files[i], 'utf-8');
   }
-  elem.value = x;
 
   event.preventDefault();
 }

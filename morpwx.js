@@ -27,99 +27,101 @@
  * }
  */
 
-var pwx = {
-  summarydata: {}, 
-  sample: [], 
+function PWX() {
+  this.time = '';
+  this.summarydata = {}; 
+  this.sample = []; 
 
-  /*
-   * xml: DOMParser.parseFromString(xmltext, 'text/html')　しておいて下さい
-   */
-  readFromXML: function(xml) {
-    var obj = {};
-    var summaryData = {};
-    var samples = [];
-    var result = null;
+  return this;
+}
 
-    var nsResolver = { lookupNamespaceURI : function(prefix) {
-      if(prefix == "p")
-	return "http://www.peaksware.com/PWX/1/0";
-      else
-	return "";
-    }};
+/*
+ * xml: DOMParser.parseFromString(xmltext, 'text/html')　しておいて下さい
+ */
+PWX.prototype.readFromXML = function(xml) {
+  var obj = {};
+  var summaryData = {};
+  var samples = [];
+  var result = null;
 
-    result = xml.evaluate('/p:pwx/p:workout/p:text' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-    obj.time = '';
+  var nsResolver = { lookupNamespaceURI : function(prefix) {
+    if(prefix == "p")
+      return "http://www.peaksware.com/PWX/1/0";
+    else
+      return "";
+  }};
 
-    var num = function(name) {
-      result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-      var elem = result.singleNodeValue;
-      if(elem) { 
-	var text = elem.textContent;
-	if(text) {
-	  summaryData[name] = text;
-	}
+  result = xml.evaluate('/p:pwx/p:workout/p:text' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+  obj.time = '';
+
+  var num = function(name) {
+    result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+    var elem = result.singleNodeValue;
+    if(elem) { 
+      var text = elem.textContent;
+      if(text) {
+	summaryData[name] = text;
       }
-    };
+    }
+  };
 
-    var mma = function(name) {
-      var prop = {};
-      var found = false;
+  var mma = function(name) {
+    var prop = {};
+    var found = false;
 
-      result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-      var elem = result.singleNodeValue;
-      if(elem) { 
-	prop.max = elem.getAttributeNode('max').textContent;
-	prop.min = elem.getAttributeNode('min').textContent;
-	prop.avg = elem.getAttributeNode('avg').textContent;
-	summaryData[name] = prop;
+    result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+    var elem = result.singleNodeValue;
+    if(elem) { 
+      prop.max = elem.getAttributeNode('max').textContent;
+      prop.min = elem.getAttributeNode('min').textContent;
+      prop.avg = elem.getAttributeNode('avg').textContent;
+      summaryData[name] = prop;
+    }
+  }
+
+  num('beginning');
+  num('duration');
+  num('durationstopped');
+  num('work');
+  mma('hr');
+  mma('spd');
+  mma('cad');
+  num('dist');
+  mma('alt');
+  obj.summarydata = summaryData;
+
+  result = xml.evaluate('/p:pwx/p:workout/p:sample', xml, nsResolver, XPathResult.ORDERED_NODE_ITERATOR_TYPE, result);
+  var sampleElem = result.iterateNext();
+  while(sampleElem) {
+    var sampleObj = {};
+    var children = sampleElem.childNodes;
+    for(var i = 0; i < children.length; ++i) {
+      if(children[i].nodeType == Node.ELEMENT_NODE) {
+	var name = children[i].nodeName;
+	var text = children[i].textContent;
+	if(name && text) {
+	  sampleObj[name] = text;
+	}
       }
     }
 
-    num('beginning');
-    num('duration');
-    num('durationstopped');
-    num('work');
-    mma('hr');
-    mma('spd');
-    mma('cad');
-    num('dist');
-    mma('alt');
-    obj.summarydata = summaryData;
+    samples.push(sampleObj);
 
-    result = xml.evaluate('/p:pwx/p:workout/p:sample', xml, nsResolver, XPathResult.ORDERED_NODE_ITERATOR_TYPE, result);
-    var sampleElem = result.iteratorNext();
-    while(sampleElem) {
-      var sampleObj = {};
-      var setText = function(name) {
-	var elem = sampleElem.getChildElement(name);
-	if(elem) {
-	  var text = elem.textContent;
-	  if(text) {
-	    sampleObj[name] = text;
-	  }
-	}
-      };
+    sampleElem = result.iterateNext();
+  }
+  obj.sample = samples;
 
-      setText('timeoffset');
-      setText('hr');
-      setText('spd');
-      setText('dist');
-      setText('lat');
-      setText('lon');
-      setText('alt');
-      samples.push(sampleObj);
+  result = null;
+  return obj;
+};
 
-      sampleElem = result.iteratorNext();
-    }
-    obj.sample = samples;
+PWX.prototype.writeToJSON = function() {
+  var json = "";
+  return json;
+};
 
-    result = null;
-    return obj;
-  }, 
-
-  checkCompat: function() {
-    return window.DOMParser;
-  }, 
+PWX.prototype.checkCompat = function() {
+  return window.DOMParser;
 };
 
 /* debug code */

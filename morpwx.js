@@ -37,33 +37,41 @@ var pwx = {
   readFromXML: function(xml) {
     var obj = {};
     var summaryData = {};
+    var samples = [];
     var result = null;
 
     var nsResolver = { lookupNamespaceURI : function(prefix) {
-      console.log("prefix " + prefix);
-      return "http://www.peaksware.com/PWX/1/0";
+      if(prefix == "p")
+	return "http://www.peaksware.com/PWX/1/0";
+      else
+	return "";
     }};
 
+    result = xml.evaluate('/p:pwx/p:workout/p:text' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+    obj.time = '';
+
     var num = function(name) {
-      result = xml.evaluate('/pwx/workout/summarydata/' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+      result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
       var elem = result.singleNodeValue;
       if(elem) { 
-	summaryData[name] = elem.textContent;
-	console.log(">>> " + name + " " + summaryData[name]);
+	var text = elem.textContent;
+	if(text) {
+	  summaryData[name] = text;
+	}
       }
     };
+
     var mma = function(name) {
       var prop = {};
       var found = false;
 
-      result = xml.evaluate('/pwx/workout/summarydata/' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+      result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
       var elem = result.singleNodeValue;
       if(elem) { 
 	prop.max = elem.getAttributeNode('max').textContent;
 	prop.min = elem.getAttributeNode('min').textContent;
 	prop.avg = elem.getAttributeNode('avg').textContent;
 	summaryData[name] = prop;
-	console.log(">>> " + name + " max:" + prop.max + " min:" + prop.min + " avg:" + prop.avg);
       }
     }
 
@@ -77,6 +85,33 @@ var pwx = {
     num('dist');
     mma('alt');
     obj.summarydata = summaryData;
+
+    result = xml.evaluate('/p:pwx/p:workout/p:sample', xml, nsResolver, XPathResult.ORDERED_NODE_ITERATOR_TYPE, result);
+    var sampleElem = result.iteratorNext();
+    while(sampleElem) {
+      var sampleObj = {};
+      var setText = function(name) {
+	var elem = sampleElem.getChildElement(name);
+	if(elem) {
+	  var text = elem.textContent;
+	  if(text) {
+	    sampleObj[name] = text;
+	  }
+	}
+      };
+
+      setText('timeoffset');
+      setText('hr');
+      setText('spd');
+      setText('dist');
+      setText('lat');
+      setText('lon');
+      setText('alt');
+      samples.push(sampleObj);
+
+      sampleElem = result.iteratorNext();
+    }
+    obj.sample = samples;
 
     result = null;
     return obj;

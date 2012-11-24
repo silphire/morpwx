@@ -29,6 +29,7 @@
 
 function PWX() {
   this.time = '';
+  this.sportType = '';
   this.summarydata = {}; 
   this.sample = []; 
 
@@ -51,15 +52,27 @@ PWX.prototype.readFromXML = function(xml) {
       return "";
   }};
 
-  result = xml.evaluate('/p:pwx/p:workout/p:text' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-  obj.time = '';
+  result = xml.evaluate('/p:pwx/p:workout/p:time/text()', xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+  if(result) {
+    var text = result.singleNodeValue;
+    if(text) {
+      obj.time = text;
+    }
+  }
+
+  result = xml.evaluate('/p:pwx/p:workout/p:sportType/text()', xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+  if(result) {
+    var text = result.singleNodeValue;
+    if(text) {
+      obj.sportType = text;
+    }
+  }
 
   var num = function(name) {
-    result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name, xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
-    var elem = result.singleNodeValue;
-    if(elem) { 
-      var text = elem.textContent;
-      if(text) {
+    result = xml.evaluate('/p:pwx/p:workout/p:summarydata/p:' + name + '/text()', xml, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, result);
+    if(result) {
+      var text = result.singleNodeValue;
+      if(text) { 
 	summaryData[name] = text;
       }
     }
@@ -123,6 +136,17 @@ PWX.prototype.writeToJSON = function() {
 PWX.prototype.checkCompat = function() {
   return window.DOMParser;
 };
+
+/*
+ *
+ */
+function TCX() {
+  return this;
+}
+
+PWX.prototype.writeToXML = function() {
+};
+
 
 /* debug code */
 function debugmorpwx() {

@@ -20,7 +20,6 @@ function onDrop(event) {
 	x += pwxJson.sample[j].timeoffset + "\n";
       }
       elem.value = x;
-      console.log(x);
     }
     reader.readAsText(files[i], 'utf-8');
   }

@@ -17,6 +17,7 @@
  *     dist: , 
  *     alt: { max:, min:, avg: }, 
  *   }, 
+ *   segment: [], // TODO not implemented
  *   sample: [{
  *     timeoffset:, 
  *     hr:, 
@@ -163,73 +164,106 @@ PWX.prototype.writeToTCX = function() {
 
     var date = new Date();
     date.setUTCFullYear(time.substr(0, 4));
-    date.setUTCMonth(time.substr(5, 2) - 1);
+    date.setUTCMonth(+time.substr(5, 2) - 1);
     date.setUTCDate(time.substr(8, 2));
     date.setUTCHours(time.substr(11, 2));
     date.setUTCMinutes(time.substr(14, 2));
     date.setUTCSeconds(time.substr(17, 2));
     var tz;
-    if(time.length == 19) {
+    if(time.length == 20) {
       tz = 0;
     } else if(time.length == 25) {
       var tzsign = time.charAt(19);
-      var tzhr   = time.substr(20, 2);
-      var tzmin  = time.substr(23, 2);
+      var tzhr   = +time.substr(20, 2);
+      var tzmin  = +time.substr(23, 2);
       tz = (tzsign == '+' ? 1 : -1) * tzhr * 60 + tzmin;
     } else {
-      tz = (new Date()).getTimeZoneOffset();
+      // 時差が指定されていない時はローカルの時差を利用する。
+      tz = (new Date()).getTimezoneOffset();
     }
 
-    date.setTime(date.getTime() + tz * 60);
     return date;
   }
 
   function getDateString(date) {
     var time;
-    time  = date.getFullYear() + "-" + date.getMonth() + "-" + date.getDay();
+    time  = ("0000" + date.getFullYear()).slice(-4)
+      + "-" + ("00" + (+date.getMonth() + 1)).slice(-2)
+      + "-" + ("00" + date.getDate()).slice(-2);
     time += 'T';
-    time += date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+    time += ("00" + date.getHours()).slice(-2) 
+      + ":" + ("00" + date.getMinutes()).slice(-2)
+      + ":" + ("00" + date.getSeconds()).slice(-2);
     return time;
   }
 
   var startTime = parseW3CDTF(this.time).getTime();
   function createTime(offset) {
     var date = new Date();
-    date.setTime(startTime + offset);
+    date.setTime((+startTime) + (+offset) * 1000);
+    return getDateString(date);
+  }
+
+  var convSportType = function(sportType) {
+    if(sportType == "Run")
+      return "Running";
+    else if(sportType == "Bike") 
+      return "Biking";
+    else
+      return "Other";
   }
 
   var tcx = '<?xml version="1.0" encoding="utf-8"?><TrainingCenterDatabase xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd" xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"><Activities>';
+  if(this.sportType)
+    tcx += '<Activity Sport="' + convSportType(this.sportType) + '">';
+
+  var sd = this.summarydata;
   
-  tcx += '<Lap StartTime="' + this.summarydata.beginning + '">';
-  tcx += '<TotalTimeSeconds>' + this.summarydata.duration + '</TotalTimeSeconds>';
-  tcx += '<DistanceMeters>' + this.summarydata.dist + '</DistanceMeters>';
-  tcx += '<MaximumSpeed>' + this.summarydata.spd.max + '</MaximumSpeed>';
-  tcx += '<Calories>' + this.summarydata.work + '</Calories>';
-  tcx += '<AverageHeartRateBpm><Value>' + this.summarydata.hr.avg + '</Value></AverageHeartRateBpm>';
-  tcx += '<MaximumHeartRateBpm><Value>' + this.summarydata.hr.max + '</Value></MaximumHeartRateBpm>';
+  tcx += '<Lap StartTime="' + this.time + '">';
+  if(sd.duration)
+    tcx += '<TotalTimeSeconds>' + sd.duration + '</TotalTimeSeconds>';
+  if(sd.dist)
+    tcx += '<DistanceMeters>' + sd.dist + '</DistanceMeters>';
+  if(sd.spd)
+    tcx += '<MaximumSpeed>' + sd.spd.max + '</MaximumSpeed>';
+  if(sd.work)
+    tcx += '<Calories>' + sd.work + '</Calories>';
+  if(sd.hr) {
+    tcx += '<AverageHeartRateBpm><Value>' + sd.hr.avg + '</Value></AverageHeartRateBpm>';
+    tcx += '<MaximumHeartRateBpm><Value>' + sd.hr.max + '</Value></MaximumHeartRateBpm>';
+  }
   tcx += '<Intensity>Active</Intensity>';  // "Active" or "Resting"
-  tcx += '<Cadence>';
-  tcx += '<Low>' + this.summarydata.cad.min + '</Low>';
-  tcx += '<High>' + this.summarydata.cad.max + '</High>';
-  tcx += '</Cadence>';
+  if(sd.cad) {
+    tcx += '<Cadence>';
+    tcx += '<Low>' + sd.cad.min + '</Low>';
+    tcx += '<High>' + sd.cad.max + '</High>';
+    tcx += '</Cadence>';
+  }
   tcx += '<TriggerMethod>Manual</TriggerMethod>';  // "Manual", "Distance", "Location", "Time", "HeartRate"
 
   tcx += '<Track>';
   for(var i = 0; i < this.sample.length; ++i) {
     var sample = this.sample[i];
     tcx += '<Trackpoint>'; 
-    tcx += '<Time>' +  createTime(sample.timeoffset) + '</Time>';
-    tcx += '<Position>';
-    tcx += '<LatitudeDegrees>' +  sample.lat + '</LatitudeDegrees>';
-    tcx += '<LongitudeDegrees>' +  sample.lon + '</LongitudeDegrees>';
-    tcx += '</Position>';
-    tcx += '<AltitudeMeters>' + sample.alt + '</AltitudeMeters>';
-    tcx += '<HeartRateBpm><Value>' + sample.hr + '</Value></HeartRateBpm>';
-    tcx += '<Cadence>' + sample.cad + '</Cadence>';
+    if(sample.timeoffset)
+      tcx += '<Time>' +  createTime(sample.timeoffset) + '</Time>';
+    if(sample.lat && sample.lon) {
+      tcx += '<Position>';
+      tcx += '<LatitudeDegrees>' +  sample.lat + '</LatitudeDegrees>';
+      tcx += '<LongitudeDegrees>' +  sample.lon + '</LongitudeDegrees>';
+      tcx += '</Position>';
+    }
+    if(sample.alt)
+      tcx += '<AltitudeMeters>' + sample.alt + '</AltitudeMeters>';
+    if(sample.hr)
+      tcx += '<HeartRateBpm><Value>' + sample.hr + '</Value></HeartRateBpm>';
+    if(sample.cad)
+      tcx += '<Cadence>' + sample.cad + '</Cadence>';
     tcx += '</Trackpoint>'; 
   }
   tcx += '</Track>';
   tcx += '</Lap>';
+  tcx += '</Activity>';
   tcx += '</Activities></TrainingCenterDatabase>';
   return tcx;
 }

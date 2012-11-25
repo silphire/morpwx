@@ -7,7 +7,6 @@ function onDrop(event) {
   var elem = event.target || event.srcElement;
   if(!elem) { alert("cannot get elem"); }
 
-  var x = "";
   for(var i = 0; i < files.length; ++i) {
     var reader = new FileReader();
     reader.onload = function(event) {
@@ -16,10 +15,7 @@ function onDrop(event) {
       var xml = domParser.parseFromString(text, 'application/xml');
       var pwx = new PWX();
       var pwxJson = pwx.readFromXML(xml);
-      for(var j = 0; j < pwxJson.sample.length; ++j) {
-	x += pwxJson.sample[j].timeoffset + "\n";
-      }
-      elem.value = x;
+      elem.value = pwx.writeToTCX();
     }
     reader.readAsText(files[i], 'utf-8');
   }

@@ -146,7 +146,11 @@ PWX.prototype.writeToJSON = function() {
  */
 PWX.prototype.writeToTCX = function() {
   function joule2cal(j) {
-    return j * 0.239005736;
+    return +j * 0.239005736;
+  }
+
+  function mps2kph(n) {
+    return +n * 3.6;
   }
 
   /* yyyy-mm-ddThh:mm:ss
@@ -187,13 +191,13 @@ PWX.prototype.writeToTCX = function() {
 
   function getDateString(date) {
     var time;
-    time  = ("0000" + date.getFullYear()).slice(-4)
-      + "-" + ("00" + (+date.getMonth() + 1)).slice(-2)
-      + "-" + ("00" + date.getDate()).slice(-2);
+    time  = ("0000" + date.getUTCFullYear()).slice(-4)
+      + "-" + ("00" + (+date.getUTCMonth() + 1)).slice(-2)
+      + "-" + ("00" + date.getUTCDate()).slice(-2);
     time += 'T';
-    time += ("00" + date.getHours()).slice(-2) 
-      + ":" + ("00" + date.getMinutes()).slice(-2)
-      + ":" + ("00" + date.getSeconds()).slice(-2);
+    time += ("00" + date.getUTCHours()).slice(-2) 
+      + ":" + ("00" + date.getUTCMinutes()).slice(-2)
+      + ":" + ("00" + date.getUTCSeconds()).slice(-2);
     return time;
   }
 
@@ -219,16 +223,17 @@ PWX.prototype.writeToTCX = function() {
 
   var sd = this.summarydata;
   
+  tcx += '<Id>' + this.time + '</Id>';
   tcx += '<Lap StartTime="' + this.time + '">';
   if(sd.duration)
     tcx += '<TotalTimeSeconds>' + sd.duration + '</TotalTimeSeconds>';
   if(sd.dist)
     tcx += '<DistanceMeters>' + sd.dist + '</DistanceMeters>';
   if(sd.spd)
-    tcx += '<MaximumSpeed>' + sd.spd.max + '</MaximumSpeed>';
+    tcx += '<MaximumSpeed>' + mps2kph(sd.spd.max) + '</MaximumSpeed>';
   if(sd.work)
     tcx += '<Calories>' + sd.work + '</Calories>';
-  if(sd.hr) {
+  if(false && sd.hr) {	// RunKeeper cannot recognize heartrate parameters.
     tcx += '<AverageHeartRateBpm><Value>' + sd.hr.avg + '</Value></AverageHeartRateBpm>';
     tcx += '<MaximumHeartRateBpm><Value>' + sd.hr.max + '</Value></MaximumHeartRateBpm>';
   }

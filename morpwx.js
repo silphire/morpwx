@@ -186,6 +186,7 @@ PWX.prototype.writeToTCX = function() {
       tz = (new Date()).getTimezoneOffset();
     }
 
+    date.setTime(date.getTime() + +tz * 60000);
     return date;
   }
 
@@ -224,7 +225,7 @@ PWX.prototype.writeToTCX = function() {
   var sd = this.summarydata;
   
   tcx += '<Id>' + this.time + '</Id>';
-  tcx += '<Lap StartTime="' + this.time + '">';
+  tcx += '<Lap StartTime="' + createTime(0) + '">';
   if(sd.duration)
     tcx += '<TotalTimeSeconds>' + sd.duration + '</TotalTimeSeconds>';
   if(sd.dist)

@@ -44,7 +44,6 @@ function PWX() {
  * xml: DOMParser.parseFromString(xmltext, 'text/html')　しておいて下さい
  */
 PWX.prototype.readFromXML = function(xml) {
-  var obj = {};
   var summaryData = {};
   var samples = [];
   var result = null;
@@ -60,7 +59,6 @@ PWX.prototype.readFromXML = function(xml) {
   if(result) {
     var text = result.singleNodeValue;
     if(text) {
-      obj.time = text.data;
       this.time = text.data;
     }
   }
@@ -69,7 +67,6 @@ PWX.prototype.readFromXML = function(xml) {
   if(result) {
     var text = result.singleNodeValue;
     if(text) {
-      obj.sportType = text.data;
       this.sportType = text.data;
     }
   }
@@ -107,7 +104,6 @@ PWX.prototype.readFromXML = function(xml) {
   mma('cad');
   num('dist');
   mma('alt');
-  obj.summarydata = summaryData;
   this.summarydata = summaryData;
 
   result = xml.evaluate('/p:pwx/p:workout/p:sample', xml, nsResolver, XPathResult.ORDERED_NODE_ITERATOR_TYPE, result);
@@ -129,11 +125,9 @@ PWX.prototype.readFromXML = function(xml) {
 
     sampleElem = result.iterateNext();
   }
-  obj.sample = samples;
   this.sample = samples;
 
   result = null;
-  return obj;
 };
 
 PWX.prototype.writeToJSON = function() {
@@ -276,20 +270,5 @@ PWX.prototype.writeToTCX = function() {
 
 PWX.prototype.checkCompat = function() {
   return window.DOMParser;
-};
-
-
-
-/* debug code */
-function debugmorpwx() {
-  console.log("launch morpwx debug");
-  var domParser = new DOMParser();
-  var elem = document.getElementById('xmlarea');
-  var xml = domParser.parseFromString(elem.value, 'text/xml');
-  var obj = pwx.readFromXML(xml);
-  console.log("result as follows");
-  console.log(obj.summarydata.duration);
-  console.log(obj.summarydata.work);
-  return false;
 };
 

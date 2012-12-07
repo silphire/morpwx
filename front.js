@@ -25,10 +25,10 @@ function onDrop(event) {
 
       var tr = document.createElement('tr');
       tr.innerHTML = '<td>' + pwx.time + '</td>'
-	+ '<td>' + pwx.summarydata.duration + '秒</td>'
+	+ '<td>' + pwx.summarydata.duration + 'sec</td>'
 	+ '<td>' + pwx.sportType + '</td>'
 	+ '<td>' + pwx.summarydata.dist + 'm</td>'
-	+ '<td><a href="' + blobURL + '" download="' + fileName + '">保存</a></td>';
+	+ '<td><a href="' + blobURL + '" download="' + fileName + '">SAVE</a></td>';
       var filelist = document.getElementById('filelist');
       filelist.appendChild(tr);
     }

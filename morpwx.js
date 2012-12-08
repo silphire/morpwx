@@ -93,7 +93,7 @@ PWX.prototype.readFromXML = function(xml) {
       prop.avg = elem.getAttributeNode('avg').textContent;
       summaryData[name] = prop;
     }
-  }
+  };
 
   num('beginning');
   num('duration');
@@ -203,7 +203,7 @@ PWX.prototype.writeToTCX = function() {
     return getDateString(date);
   }
 
-  var convSportType = function(sportType) {
+  function convSportType(sportType) {
     if(sportType == "Run")
       return "Running";
     else if(sportType == "Bike") 
@@ -266,7 +266,7 @@ PWX.prototype.writeToTCX = function() {
   tcx += '</Activity>';
   tcx += '</Activities></TrainingCenterDatabase>';
   return tcx;
-}
+};
 
 PWX.prototype.checkCompat = function() {
   return window.DOMParser;

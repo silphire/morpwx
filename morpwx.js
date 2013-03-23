@@ -268,7 +268,9 @@ PWX.prototype.writeToTCX = function() {
   return tcx;
 };
 
-PWX.prototype.checkCompat = function() {
-  return window.DOMParser;
+PWX.prototype.writeToHRM = function() {
+  var hrm = '';
+
+  return hrm;
 };
 

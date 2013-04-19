@@ -2,17 +2,22 @@
   "author": "Yuki Mitsui <silphire@gmail.com>",
   "name": "morpwx",
   "description": "manipulating library of TrainingPeaks PWX files",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "https://github.com/silphire/morpwx",
   "repository": {
     "type": "git",
     "url": "git://github.com/silphire/morpwx.git"
   },
   "main": "PWX",
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+  },
+  "devDependencies": {
+    "libxmljs": "latest", 
+    "date-utils": "latest", 
+    "mocha": "latest" 
+  },
   "optionalDependencies": {},
   "engines": {
-    "node": "*"
+    "node": ">=0.8.x"
   }
 }
